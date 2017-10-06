@@ -1,0 +1,141 @@
+.slideshow {
+    overflow: hidden;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    box-sizing: border-box;
+    margin: 0;
+    padding: 2em;
+
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.slideshow-slider {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+
+    transition: transform 300ms ease-in-out;
+}
+
+.slideshow-image {
+    flex: 0 0 100%;
+    max-width: 100%;
+    height: 100%;
+
+    object-position: center;
+    object-fit: cover;
+}
+
+.slideshow-info {
+    background-color: rgba(44,62,80,0.95);
+    color: white;
+    
+    box-sizing: border-box;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 45em;
+    height: 100%;
+
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+
+    /*
+    transform: translateX(25%);
+    transition: transform 300ms ease-in-out;
+    */
+}
+
+.slideshow-info:hover{
+    transform: translateX(0);
+}
+
+.slideshow-info:after {
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+
+    background-color: rgba(215, 218, 219, 0.5);
+    transform: translateX(-10%) rotateZ(45deg);
+}
+
+.slideshow-info > article{
+    padding: 5em;
+}
+
+.slideshow-navigation{
+    /*
+    position: absolute;
+    left: -8em;
+    top: 0;
+    */
+    flex: 0 0 15em;
+    height: 100%;
+
+    box-sizing: border-box;
+    padding-left: 0.35em;
+
+    background-color: rgba(44, 62, 80, 1);
+    background-color: #191830;
+    background-color: black;
+    background-color: #fc4349;
+
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.slideshow-navigation > *{
+    flex: 1 1 10%;
+    height: 5em;
+
+    opacity: 1;
+    transition: opacity 300ms ease-in-out;
+
+    cursor: pointer;
+}
+
+.slideshow-navigation > *:hover{
+    opacity: 0.75;
+}
+
+.slideshow-navigation > *.active{
+    opacity: 0.5;
+}
+
+.slideshow-slide{
+    position: relative;
+}
+
+.slideshow-slide > img{
+    width: 100%;
+    height: 100%;
+
+    object-position: center;
+    object-fit: cover;
+}
