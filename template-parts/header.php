@@ -1,10 +1,9 @@
 <section id="header-main" :class="{ open: isMenuOpen }">
     <navigation-block>
-        <async-image id="site-logo" src="<?php echo get_site_icon_url(); ?>"
-            :width="512"
-            :height="512"
+        <wp-site-icon
+            url="<?php echo get_site_icon_url(); ?>"
         >
-        </async-image>
+        </wp-site-icon>
         <h1 id="site-title"><?php echo bloginfo('title'); ?></h1>
         <?php wp_nav_menu([ 'menu' => 'Navigation' ]); ?>
     </navigation-block>

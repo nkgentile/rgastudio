@@ -232,7 +232,7 @@
                     }
                 },
 
-                mounted(){
+                created(){
                     this.fetchProjects();
                 },
             });

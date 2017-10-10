@@ -10,59 +10,56 @@
         <main id="app">
             <?php get_template_part( 'template-parts/header' ); ?>
             <section class="view">
-                <hero-banner :assets="featuredImages">
-                    <wp-site-icon
-                        url="<?php echo get_site_icon_url(); ?>"
-                    >
-                    </wp-site-icon>
-                    <h1><?php echo bloginfo( 'title' ); ?></h1>
-                    <?php echo get_theme_mod( 'projects_text_block' ); ?>
-                </hero-banner>
-                <h1><?php post_type_archive_title(); ?></h1>
-                <section class="grid">
-                    <card-block v-for="(project, index) in projects"
-                        :key="index"
-                        :href="project.link"
-                        :src="thumbnails[index].source_url"
-                        :width="thumbnails[index].width"
-                        :height="thumbnails[index].height"
-                    >
-                        <figcaption>
-                            <p>{{ getTitle(project) }} &middot; {{ getCity(project) }}</p>
-                        </figcaption>
-                    </card-block>
-                </section>
+                <gallery-block
+                    :assets="attachments"
+                >
+                    <div class="gallery-info">
+                        <h1>{{ title }}</h1>
+                    </div>
+                </gallery-block>
             </section>
             <i id="open" class="menu-switch fa fa-bars fa-2x" @click="openMenu"></i>
         </main>
 		<?php wp_footer(); ?>
         <script type="text/javascript">
             const store = new Vuex.Store({
+            	strict: true,
+            	
                 modules: {
-                    menu
+                    menu,
+                    post,
+                    gallery
                 },
 
                 state: {
-                    projects: []
+                    slug: location.href.match(/([^\/]*)\/*$/)[1],
+                    attachments: [],
+                    project: {}
                 },
 
                 getters: {
                 },
 
                 mutations: {
-                    updateProjects(state, payload){
-                        state.projects = state.projects.concat(payload);
+                    updateProject( state, payload ){
+                        state.project = R.head(payload);
                     }
                 },
 
                 actions: {
-                    fetchProjects({ dispatch }, payload){
+                    fetchProject({ dispatch, state }){
                         const projects = new wp.api.collections.Projects();
 
                         const fetchAttachments = (projects) =>
                             dispatch('fetchAttachments', projects);
+                            
+                    	const withSlug = {
+                    		data: {
+                    			slug: state.slug
+                    		}
+                    	};
 
-                        projects.fetch()
+                        projects.fetch(withSlug)
                         .then(fetchAttachments)
                     },
 
@@ -138,10 +135,8 @@
                             projects
                         );
 
-                        console.log(projectsWithFeatures);
-
-                        const updateProjects = (a) => commit('updateProjects', a);
-                        updateProjects(projectsWithFeatures);
+                        const updateProject = (a) => commit('updateProject', a);
+                        updateProject(projectsWithFeatures);
                     }
                 }
             });
@@ -161,8 +156,8 @@
                         this.$store.commit('menu/close');
                     },
 
-                    fetchProjects(){
-                        this.$store.dispatch('fetchProjects');
+                    fetchProject(){
+                        this.$store.dispatch('fetchProject');
                     },
 
                     getImage(project, size){
@@ -211,29 +206,31 @@
                 },
 
                 computed: {
-                    projects(){
-                        return this.$store.state.projects;
-                    },
-
-                    thumbnails(){
-                        return R.map(this.getThumbnail, this.$store.state.projects);
-                    },
-
                     isMenuOpen(){
                         return this.$store.state.menu.isOpen;
                     },
 
-                    featuredImages(){
-                        const take5 = R.take(5);
+                    project(){
+                        return this.$store.state.project;
+                    },
 
-                        const firstFiveProjects = take5(this.projects);
+                    attachments(){
+                        return R.prop(
+                            'attachments',
+                            this.project
+                        );
+                    },
 
-                        return R.map(this.getFeaturedImage, firstFiveProjects);
+                    title(){
+                        return R.path(
+                            ['title', 'rendered'],
+                            this.project
+                        );
                     }
                 },
 
                 mounted(){
-                    this.fetchProjects();
+                    this.fetchProject();
                 },
             });
 

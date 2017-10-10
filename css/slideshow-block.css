@@ -1,13 +1,6 @@
 .slideshow {
     overflow: hidden;
 
-    position: fixed;
-    top: 0;
-    left: 0;
-
-    width: 100vw;
-    height: 100vh;
-
     box-sizing: border-box;
     margin: 0;
     padding: 2em;
@@ -16,6 +9,14 @@
     flex-flow: row wrap;
     justify-content: flex-end;
     align-items: flex-end;
+}
+
+.slideshow.full-page{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
 }
 
 .slideshow-slider {

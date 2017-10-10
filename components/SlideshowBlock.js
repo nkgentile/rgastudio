@@ -53,12 +53,11 @@ Vue.component('slideshow-block', {
                 classes
             );
         },
-
     },
 
     methods: {
         willGoToIndex(i){
-            return () => this.$store.commit('goToIndex', i);
+            return () => this.$store.commit('showcase/goToIndex', i);
         }
     },
 

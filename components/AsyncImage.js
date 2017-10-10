@@ -26,7 +26,7 @@ Vue.component( 'async-image', {
         }
     },
 
-    mounted(){
+    created(){
         this.image.addEventListener('load', this.onLoad);
         this.image.src = this.src;
     },

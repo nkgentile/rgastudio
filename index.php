@@ -7,19 +7,35 @@
         <?php wp_head(); ?>
     </head>
 	<body>
-		<?php get_template_part( 'app' ); ?>
+        <main id="app">
+            <?php get_template_part( 'template-parts/header' ); ?>
+            <section class="view">
+                <slideshow-block
+                    :images="featuredProjectImages"
+                    :index="index"
+                >
+                    <article>
+                        <h1>{{ title }}</h1>
+                        <h2>{{ city }}</h2>
+                        <p v-html="excerpt"></p>
+                        <a :href="link">View Project</a>
+                    </article>
+                </slideshow-block>
+            </section>
+            <i id="open" class="menu-switch fa fa-bars fa-2x" @click="openMenu"></i>
+        </main>
 		<?php wp_footer(); ?>
         <script type="text/javascript">
             const store = new Vuex.Store({
+                modules: {
+                    menu,
+                    showcase
+                },
+
                 state: {
                     projects: [],
                     media: [],
-
-                    activeIndex: 0,
-
-                    featured: [],
-
-                    isMenuOpen: false
+                    featured: []
                 },
 
                 getters: {
@@ -36,19 +52,6 @@
                 },
 
                 mutations: {
-                    openMenu(state){
-                        state.isMenuOpen = true;
-                    },
-
-                    closeMenu(state){
-                        state.isMenuOpen = false;
-                    },
-
-                    toggleMenu(state){
-                        console.log(state.isMenuOpen);
-                        state.isMenuOpen = !state.isMenuOpen;
-                    },
-
                     setFeaturedProjects(state, payload){
                         state.featured = payload;
                     },
@@ -59,20 +62,6 @@
 
                     updateMedia (state, payload) {
                         state.media = [...state.media, ...payload];
-                    },
-
-                    incrementIndex (state) {
-                        console.log('increment');
-                        state.activeIndex += 1;
-                    },
-
-                    decrementIndex (state) {
-                        console.log('decrement');
-                        state.activeIndex -= 1;
-                    },
-
-                    goToIndex (state, payload) {
-                        state.activeIndex = payload;
                     }
                 },
 
@@ -120,26 +109,6 @@
 
                             commit('setFeaturedProjects', featuredProjects);
                         });
-                    },
-
-                    nextIndex ({ state, getters, commit }){
-                        const lastIndex = R.length(getters.featuredProjects);
-                        const isLastIndex = R.equals(state.index, lastIndex);
-                        const increment = () => commit('incrementIndex');
-
-                        if(!isLastIndex){
-                            increment();
-                        }
-                    },
-
-                    prevIndex ({ state, getters, commit }){
-                        const firstIndex = 0;
-                        const isFirstIndex = R.equals(state.activeIndex, 0);
-                        const decrement = () => commit('decrementIndex');
-
-                        if(!isFirstIndex){
-                            decrement();
-                        }
                     }
                 }
             });
@@ -152,11 +121,11 @@
 
                 methods: {
                     openMenu(){
-                        this.$store.commit('openMenu');
+                        this.$store.commit('menu/open');
                     },
 
                     closeMenu(){
-                        this.$store.commit('closeMenu');
+                        this.$store.commit('menu/close');
                     },
 
                     fetchFeaturedProjects(){
@@ -166,7 +135,7 @@
 
                 computed: {
                     isMenuOpen(){
-                        return this.$store.state.isMenuOpen;
+                        return this.$store.state.menu.isOpen;
                     },
 
                     featuredProjects(){
@@ -210,7 +179,7 @@
                     },
 
                     index(){
-                        return this.$store.state.activeIndex;
+                        return this.$store.state.showcase.index;
                     },
 
                     activeProject(){
