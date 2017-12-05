@@ -9,14 +9,19 @@
 	<body>
         <main id="app">
             <?php get_template_part( 'template-parts/header' ); ?>
-            <section class="view">
-                <gallery-block
-                    :assets="attachments"
-                >
-                    <div class="gallery-info">
-                        <h1>{{ title }}</h1>
-                    </div>
-                </gallery-block>
+            <section class="view-project view">
+              <hero-banner :assets="attachments">
+              </hero-banner>
+              <article-block>
+                <spec-block slot="header">
+                  <h2>{{ title }}</h2>
+                  <h3>{{ city }}</h3>
+                </spec-block>
+                <br>
+                <div v-html="content"></div>
+                <grid-block :assets="attachments">
+                </grid-block>
+              </article-block>
             </section>
             <i id="open" class="menu-switch fa fa-bars fa-2x" @click="openMenu"></i>
         </main>
@@ -144,98 +149,136 @@
         <script type="text/javascript">
             Vue.use(Vuex);
             
-            const app = new Vue({
-                store,
+            function createApp() {
+                new Vue({
+                    store,
 
-                methods: {
-                    openMenu(){
-                        this.$store.commit('menu/open');
+                    el: '#app',
+
+                    methods: {
+                        openMenu(){
+                            this.$store.commit('menu/open');
+                        },
+
+                        closeMenu(){
+                            this.$store.commit('menu/close');
+                        },
+
+                        fetchProject(){
+                            this.$store.dispatch('fetchProject');
+                        },
+
+                        getImage(project, size){
+                            size = R.defaultTo('full', size);
+
+                            return R.path([
+                                'media_details',
+                                'sizes',
+                                size
+                            ], project);
+                        },
+
+                        getThumbnail(project){
+                            const featuredMedia = R.prop('featured_media', project);
+
+                            const size = 'medium_large';
+
+                            return this.getImage(featuredMedia, size);
+                        },
+
+                        getFeaturedImage(project){
+                            const featuredMedia = R.prop('featured_media', project);
+
+                            const size = 'full';
+
+                            return this.getImage(featuredMedia, size);
+                        },
+
+                        getCity(project){
+                            const city = R.path([
+                                'meta',
+                                'city'
+                            ], project);
+
+                            return R.head(city);
+                        },
+
+                        getTitle(project){
+                            const city = R.path([
+                                'title',
+                                'rendered'
+                            ]);
+
+                            return city(project);
+                        }
                     },
 
-                    closeMenu(){
-                        this.$store.commit('menu/close');
+                    computed: {
+                        isMenuOpen(){
+                            return this.$store.state.menu.isOpen;
+                        },
+
+                        project(){
+                            return this.$store.state.project;
+                        },
+
+                        featured_media(){
+                          return this.project.featured_media;
+                        },
+
+                        attachments(){
+                            return R.prop(
+                                'attachments',
+                                this.project
+                            );
+                        },
+
+                        title(){
+                            return R.path(
+                                ['title', 'rendered'],
+                                this.project
+                            );
+                        },
+
+                        content(){
+                            return R.path(['content', 'rendered'], this.project);
+                        },
+
+                        address(){
+                            const addresses = R.path([
+                                'meta',
+                                'address'
+                            ], this.project);
+
+                            return R.head(addresses);
+                        },
+
+                        city(){
+                            const cities = R.path([
+                                'meta',
+                                'city'
+                            ], this.project);
+
+                            return R.head(cities);
+                        },
+
+                        phone(){
+                            const phones = R.path([
+                                'meta',
+                                'phone'
+                            ], this.project)
+
+                            return R.head(phones);
+                        }
                     },
 
-                    fetchProject(){
-                        this.$store.dispatch('fetchProject');
+                    mounted(){
+                        this.fetchProject();
                     },
+                });
+            }
 
-                    getImage(project, size){
-                        size = R.defaultTo('full', size);
-
-                        return R.path([
-                            'media_details',
-                            'sizes',
-                            size
-                        ], project);
-                    },
-
-                    getThumbnail(project){
-                        const featuredMedia = R.prop('featured_media', project);
-
-                        const size = 'medium_large';
-
-                        return this.getImage(featuredMedia, size);
-                    },
-
-                    getFeaturedImage(project){
-                        const featuredMedia = R.prop('featured_media', project);
-
-                        const size = 'full';
-
-                        return this.getImage(featuredMedia, size);
-                    },
-
-                    getCity(project){
-                        const city = R.path([
-                            'meta',
-                            'city'
-                        ], project);
-
-                        return R.head(city);
-                    },
-
-                    getTitle(project){
-                        const city = R.path([
-                            'title',
-                            'rendered'
-                        ]);
-
-                        return city(project);
-                    }
-                },
-
-                computed: {
-                    isMenuOpen(){
-                        return this.$store.state.menu.isOpen;
-                    },
-
-                    project(){
-                        return this.$store.state.project;
-                    },
-
-                    attachments(){
-                        return R.prop(
-                            'attachments',
-                            this.project
-                        );
-                    },
-
-                    title(){
-                        return R.path(
-                            ['title', 'rendered'],
-                            this.project
-                        );
-                    }
-                },
-
-                mounted(){
-                    this.fetchProject();
-                },
-            });
-
-            const mountApp = () => app.$mount('#app');
-            wp.api.loadPromise.done(mountApp);
+            wp.api.loadPromise.done(createApp);
         </script>
 	</body>
 </html>

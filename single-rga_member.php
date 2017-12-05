@@ -9,29 +9,30 @@
 	<body>
         <main id="app">
             <?php get_template_part( 'template-parts/header' ); ?>
-            <section class="view">
-                <hero-banner :assets="featuredImages">
-                    <wp-site-icon
-                        url="<?php echo get_site_icon_url(); ?>"
-                    >
-                    </wp-site-icon>
-                    <h1><?php echo bloginfo( 'title' ); ?></h1>
-                    <?php echo get_theme_mod( 'projects_text_block' ); ?>
-                </hero-banner>
-                <h1><?php post_type_archive_title(); ?></h1>
-                <section class="grid">
-                    <card-block v-for="(project, index) in projects"
-                        :key="index"
-                        :href="project.link"
-                        :src="thumbnails[index].source_url"
-                        :width="thumbnails[index].width"
-                        :height="thumbnails[index].height"
-                    >
-                        <figcaption>
-                            <p>{{ getTitle(project) }} &middot; {{ getCity(project) }}</p>
-                        </figcaption>
-                    </card-block>
-                </section>
+            <section class="view-profile view">
+                <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
+                <div class="header">
+                    <h3 class="header"><?php the_title(); ?></h3>
+                    <h4><?php echo get_post_meta(
+                            get_the_ID(),
+                            'title',
+                            true
+                        ); ?></h4>
+
+                    <?php $profile_src = wp_get_attachment_image_src(
+                            get_post_thumbnail_id(),
+                            'full'
+                        )[0];
+                    ?>
+                </div>
+                <async-image
+                    class="sidebar"
+                    src="<?php echo $profile_src; ?>"
+                >
+                </async-image>
+
+                <div class="main container"><?php the_content(); ?></div>
+                <?php endwhile; endif; ?>
             </section>
             <i id="open" class="menu-switch fa fa-bars fa-2x" @click="openMenu"></i>
         </main>

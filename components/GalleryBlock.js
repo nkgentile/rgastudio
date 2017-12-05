@@ -48,13 +48,13 @@ Vue.component('gallery-block', {
             <div class="gallery-info">
                 <slot></slot>
                 <nav class="gallery-navigation">
-                    <span v-for="(asset, i) in assets"
+                    <div v-for="(asset, i) in assets"
                         :class="{ active: i === index }"
                         @click="willGoToIndex(i)"
                     >
                         <wp-image :asset="asset">
                         </wp-image>
-                    </span>
+                    </div>
                 </nav>
             </div>
         </header>

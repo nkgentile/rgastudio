@@ -18,7 +18,7 @@
                     <article>
                         <h1>{{ title }}</h1>
                         <h2>{{ city }}</h2>
-                        <p v-html="excerpt"></p>
+                        <div style="color: white" v-html="excerpt"></div>
                         <a :href="link">View Project</a>
                     </article>
                 </slideshow-block>

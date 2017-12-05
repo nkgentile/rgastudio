@@ -10,25 +10,24 @@
         <main id="app">
             <?php get_template_part( 'template-parts/header' ); ?>
             <section class="view">
-                <hero-banner :assets="featuredImages">
+                <hero-banner class="blue">
                     <wp-site-icon
                         url="<?php echo get_site_icon_url(); ?>"
                     >
                     </wp-site-icon>
-                    <h1><?php echo bloginfo( 'title' ); ?></h1>
-                    <?php echo get_theme_mod( 'projects_text_block' ); ?>
+                    <h1><?php post_type_archive_title(); ?></h1>
+                    <?php echo get_theme_mod( 'studio_text_block' ); ?>
                 </hero-banner>
-                <h1><?php post_type_archive_title(); ?></h1>
                 <section class="grid">
-                    <card-block v-for="(project, index) in projects"
+                    <card-block v-for="(member, index) in members"
                         :key="index"
-                        :href="project.link"
+                        :href="member.link"
                         :src="thumbnails[index].source_url"
                         :width="thumbnails[index].width"
                         :height="thumbnails[index].height"
                     >
                         <figcaption>
-                            <p>{{ getTitle(project) }} &middot; {{ getCity(project) }}</p>
+                            <p>{{ member.title.rendered }}</p>
                         </figcaption>
                     </card-block>
                 </section>
@@ -43,66 +42,25 @@
                 },
 
                 state: {
-                    projects: []
+                    members: []
                 },
 
                 getters: {
                 },
 
                 mutations: {
-                    updateProjects(state, payload){
-                        state.projects = state.projects.concat(payload);
+                    updateMembers(state, payload){
+                        state.members = state.members.concat(payload);
                     }
                 },
 
                 actions: {
-                    fetchProjects({ dispatch }, payload){
-                        const projects = new wp.api.collections.Projects();
+                    fetchMembers({ dispatch }, payload){
+                        const fetchFeaturedMedia = ({ data }) =>
+                            dispatch('fetchFeaturedMedia', data);
 
-                        const fetchAttachments = (projects) =>
-                            dispatch('fetchAttachments', projects);
-
-                        projects.fetch()
-                        .then(fetchAttachments)
-                    },
-
-                    fetchAttachments({ dispatch }, projects){
-                        const withParentId = (project) => ({
-                            data: {
-                                parent: project.id
-                            }
-                        });
-
-                        const getAttachments = (project) =>
-                            new wp.api.collections.Media()
-                            .fetch(withParentId(project));
-
-                        const attachments = R.map(getAttachments, projects);
-
-                        const associateAttachments = (attachments) =>
-                            dispatch(
-                                'associateAttachments',
-                                R.zipObj(
-                                    ['projects', 'attachments'],
-                                    [projects, attachments]
-                                )
-                            );
-
-                        Promise.all(attachments)
-                        .then(associateAttachments);
-                    },
-
-                    associateAttachments({ dispatch, commit }, { projects, attachments }){
-                        const mapWithIndex = R.addIndex(R.map);
-
-                        const attachmentsLens = R.lensProp('attachments');
-                        const associateAttachments = (project, index) =>
-                            R.set(attachmentsLens, attachments[index], project);
-
-                        const fetchFeaturedMedia = (a) => dispatch('fetchFeaturedMedia', a);
-                        const projectsWithAttachments = mapWithIndex(associateAttachments, projects);
-
-                        fetchFeaturedMedia(projectsWithAttachments);
+                        axios('http://localhost/~nkgentile/clients/RalphGentileArchitects/wp-json/wp/v2/studio')
+                        .then(fetchFeaturedMedia);
                     },
 
                     fetchFeaturedMedia({ dispatch, commit }, projects){
@@ -138,13 +96,12 @@
                             projects
                         );
 
-                        console.log(projectsWithFeatures);
-
-                        const updateProjects = (a) => commit('updateProjects', a);
+                        const updateProjects = (a) => commit('updateMembers', a);
                         updateProjects(projectsWithFeatures);
                     }
                 }
             });
+        </script>
         </script>
         <script type="text/javascript">
             Vue.use(Vuex);
@@ -152,88 +109,54 @@
             const app = new Vue({
                 store,
 
+                mixins: [
+                    header
+                ],
+
                 methods: {
-                    openMenu(){
-                        this.$store.commit('menu/open');
+                    fetchMembers(){
+                        this.$store.dispatch('fetchMembers');
                     },
 
-                    closeMenu(){
-                        this.$store.commit('menu/close');
-                    },
-
-                    fetchProjects(){
-                        this.$store.dispatch('fetchProjects');
-                    },
-
-                    getImage(project, size){
+                    getImage(member, size){
                         size = R.defaultTo('full', size);
 
                         return R.path([
                             'media_details',
                             'sizes',
                             size
-                        ], project);
+                        ], member);
                     },
 
-                    getThumbnail(project){
-                        const featuredMedia = R.prop('featured_media', project);
+                    getThumbnail(member){
+                        const featuredMedia = R.prop('featured_media', member);
 
-                        const size = 'medium_large';
+                        const size = 'medium';
 
                         return this.getImage(featuredMedia, size);
                     },
 
-                    getFeaturedImage(project){
-                        const featuredMedia = R.prop('featured_media', project);
+                    getFeaturedImage(member){
+                        const featuredMedia = R.prop('featured_media', member);
 
                         const size = 'full';
 
                         return this.getImage(featuredMedia, size);
-                    },
-
-                    getCity(project){
-                        const city = R.path([
-                            'meta',
-                            'city'
-                        ], project);
-
-                        return R.head(city);
-                    },
-
-                    getTitle(project){
-                        const city = R.path([
-                            'title',
-                            'rendered'
-                        ]);
-
-                        return city(project);
                     }
                 },
 
                 computed: {
-                    projects(){
-                        return this.$store.state.projects;
+                    members(){
+                        return this.$store.state.members;
                     },
 
                     thumbnails(){
-                        return R.map(this.getThumbnail, this.$store.state.projects);
-                    },
-
-                    isMenuOpen(){
-                        return this.$store.state.menu.isOpen;
-                    },
-
-                    featuredImages(){
-                        const take5 = R.take(5);
-
-                        const firstFiveProjects = take5(this.projects);
-
-                        return R.map(this.getFeaturedImage, firstFiveProjects);
+                        return R.map(this.getThumbnail, this.$store.state.members);
                     }
                 },
 
                 created(){
-                    this.fetchProjects();
+                    this.fetchMembers();
                 },
             });
 

@@ -10,15 +10,16 @@
         <main id="app">
             <?php get_template_part( 'template-parts/header' ); ?>
             <section class="view">
-                <hero-banner :assets="featuredImages">
+                <hero-banner class="red"
+                    :assets="featuredImages"
+                >
                     <wp-site-icon
                         url="<?php echo get_site_icon_url(); ?>"
                     >
                     </wp-site-icon>
-                    <h1><?php echo bloginfo( 'title' ); ?></h1>
+                    <h1><?php post_type_archive_title(); ?></h1>
                     <?php echo get_theme_mod( 'projects_text_block' ); ?>
                 </hero-banner>
-                <h1><?php post_type_archive_title(); ?></h1>
                 <section class="grid">
                     <card-block v-for="(project, index) in projects"
                         :key="index"

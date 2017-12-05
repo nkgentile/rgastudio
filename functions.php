@@ -9,6 +9,7 @@ function enqueue_scripts () {
         $vendor_path = "{$template_uri}/vendor";
 
 	    wp_enqueue_script( 'wp-api' );
+        wp_enqueue_script( 'axios-api', 'https://unpkg.com/axios/dist/axios.min.js');
         wp_enqueue_script(
             'ramda-js',
             "{$vendor_path}/ramda.min.js"
@@ -29,21 +30,43 @@ function enqueue_scripts () {
             'font-awesome',
             'https://use.fontawesome.com/13b62f3e97.js'
         );
+
+        wp_enqueue_script(
+            'vue-mixins',
+            "{$template_uri}/js/mixins.js"
+        );
+
+        wp_enqueue_script(
+            'type-kit',
+            'https://use.typekit.net/aei4onp.js',
+            array(),
+            null
+        );
+
+        wp_enqueue_script(
+            'typekit-loader',
+            "{$template_uri}/js/typekit.js",
+            ['type-kit']
+        );
 }
 
 add_action( 'wp_enqueue_scripts', 'enqueue_components' );
 function enqueue_components () {
-    enqueue_component('gallery-block', 'GalleryBlock');
-    enqueue_component('slideshow-block', 'SlideshowBlock.js');
-    enqueue_component('async-image', 'AsyncImage.js');
-    enqueue_component('slideshow-info-block', 'SlideshowInfoBlock.js');
-    enqueue_component('navigation-block', 'NavigationBlock.js');
-    enqueue_component('menu-toggle', 'MenuToggle.js');
-    enqueue_component('slideshow-slide', 'SlideshowSlide.js');
-    enqueue_component('hero-banner', 'HeroBanner.js');
-    enqueue_component('card-block', 'CardBlock.js');
-    enqueue_component('wp-image', 'WPImage.js');
-    enqueue_component('wp-site-icon', 'WPSiteIcon.js');
+  enqueue_component('grid-block', 'PhotoGridBlock.js');
+  enqueue_component('spec-block', 'SpecBlock.js');
+  enqueue_component('tags-block', 'TagBlock.js');
+  enqueue_component('gallery-block', 'GalleryBlock.js');
+  enqueue_component('slideshow-block', 'SlideshowBlock.js');
+  enqueue_component('async-image', 'AsyncImage.js');
+  enqueue_component('slideshow-info-block', 'SlideshowInfoBlock.js');
+  enqueue_component('navigation-block', 'NavigationBlock.js');
+  enqueue_component('menu-toggle', 'MenuToggle.js');
+  enqueue_component('slideshow-slide', 'SlideshowSlide.js');
+  enqueue_component('hero-banner', 'HeroBanner.js');
+  enqueue_component('card-block', 'CardBlock.js');
+  enqueue_component('wp-image', 'WPImage.js');
+  enqueue_component('wp-site-icon', 'WPSiteIcon.js');
+  enqueue_component('article-block', 'ArticleBlock.js');
 }
 
 add_action( 'wp_enqueue_scripts', 'enqueue_store_modules' );
@@ -62,6 +85,7 @@ function enqueue_styles () {
     enqueue_style('css-header', 'header.css');
     enqueue_style('hero-banner', 'hero-banner.css');
     enqueue_style('card-block', 'card-block.css');
+    enqueue_style('tags-block', 'tags-block.css');
 }
 
 // Create Custom RGA Posts
@@ -118,12 +142,17 @@ function create_post_types () {
 				'name'			=>	__( 'Studio' ),
 				'singular_name'	=>	__( 'Member' )
 			),
-			'public'			=>	true,
-			'has_archive'		=>	true,
-			'rewrite'			=>	array('slug' => 'studio'),
-			'menu_position'		=>	6,
-			'menu_icon'			=>	'dashicons-businessman',
-			'delete_with_user'	=>	false
+			'public'			    =>	true,
+            'publicly_queryable'    =>  true,
+            'query_var'             =>  true,
+            'show_in_rest'          =>  true,
+            'rest_base'             =>  'studio',
+            'rest_controller_class' =>  'WP_REST_Posts_Controller',
+			'has_archive'		    =>	true,
+			'rewrite'			    =>	array('slug' => 'studio'),
+			'menu_position'		    =>	6,
+			'menu_icon'			    =>	'dashicons-businessman',
+			'delete_with_user'	    =>	false
 		)
 	);
 	add_post_type_support(
@@ -142,15 +171,21 @@ function create_post_types () {
 add_action( 'rest_api_init', 'register_custom_endpoints');
 function register_custom_endpoints () {
     register_rest_field( 'rga_project', 'meta', [
-        'get_callback'  =>  'get_post_meta_for_api',
+        'get_callback'  =>  function ( $project ) {
+            return get_post_meta( $project['id'], '', true );
+        },
         'schema'        =>  null
     ]);
 
-    function get_post_meta_for_api( $object ){
-        $post_id = $object['id'];
-
-        return get_post_meta( $post_id );
-    }
+    register_rest_field( 'rga_project', 'tags', [
+        'get_callback'  =>  function ($project) {
+            return get_the_terms(
+                $project['id'],
+                'tag'
+            );
+        },
+        'schema'        =>  null
+    ]);
 }
 
 add_action( 'customize_register', 'register_theme_customizer' );
@@ -192,8 +227,7 @@ function register_theme_customizer( $wp_customize ) {
     ]);
 
     $wp_customize->add_setting( 'studio_text_block', [
-        'default'   => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam in ultricies dui, vitae sodales sapien. Cras quis metus quis magna efficitur laoreet non a urna. Proin interdum arcu vitae porta luctus. Donec lorem sem, elementum eu porta vel, elementum congue mauris. Nunc hendrerit iaculis dui sit amet tincidunt. Donec varius dignissim velit a vulputate. Nullam eget arcu massa. Etiam ac arcu ut ligula ultricies convallis. Duis eu erat sit amet ipsum lobortis scelerisque vitae eget tellus. In lacinia mauris sed lobortis porttitor. Pellentesque aliquam vitae sapien et fringilla.', 'rga' ),
-        'sanitize_callback' =>  'sanitize_textarea_field'
+        'default'   => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam in ultricies dui, vitae sodales sapien. Cras quis metus quis magna efficitur laoreet non a urna. Proin interdum arcu vitae porta luctus. Donec lorem sem, elementum eu porta vel, elementum congue mauris. Nunc hendrerit iaculis dui sit amet tincidunt. Donec varius dignissim velit a vulputate. Nullam eget arcu massa. Etiam ac arcu ut ligula ultricies convallis. Duis eu erat sit amet ipsum lobortis scelerisque vitae eget tellus. In lacinia mauris sed lobortis porttitor. Pellentesque aliquam vitae sapien et fringilla.', 'rga' )
     ]);
 
     $wp_customize->add_control( new WP_Customize_Control(
